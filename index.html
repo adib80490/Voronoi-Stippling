@@ -7,13 +7,19 @@
 
 </head>
 <body>
-    <div id="container"></div>
 
-       <script type="module">
+    <h1>Voronoi Stippling with D3.js</h1>
+
+
+    <div id="input-container"></div>
+    <div id="canvas-container"></div>
+
+    <script type="module">
 
     import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-    const container = document.getElementById('container');
+    const inputContainer = document.getElementById('input-container');
+    const canvasContainer = document.getElementById('canvas-container');
 
     // Create file input element
     const fileInput = document.createElement('input');
@@ -33,9 +39,9 @@
             if (!img) {
                 img = document.createElement('img');
                 img.id = 'uploaded-image';
-                img.style.maxWidth = '400px';
+                img.style.maxWidth = '200px';
                 img.style.display = 'block';
-                container.appendChild(img);
+                inputContainer.appendChild(img);
             }
             img.src = e.target.result;
             
@@ -49,7 +55,7 @@
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const pixelArray = Array.from(imageData.data);
 
-                container.appendChild(canvas);
+                canvasContainer.appendChild(canvas);
                 
                 console.log(pixelArray);
 
@@ -99,10 +105,29 @@
     });
 
     // Add file input to the container
-    container.appendChild(fileInput);
+    inputContainer.appendChild(fileInput);
 
 
     </script>
 
 </body>
 </html>
+
+
+<style>
+    #input-container, #canvas-container {
+        display: inline-block;
+        vertical-align: top;
+        margin-right: 24px;
+    }
+    body {
+        text-align: center;
+    }
+
+    #canvas-container {
+        display: inline-block;
+        vertical-align: top;
+        margin-right: 24px;
+        float: none;
+    }
+</style>
