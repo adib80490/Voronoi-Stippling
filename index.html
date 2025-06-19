@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Voronoi Stippling</title>
+
+
+</head>
+<body>
+    <div id="container"></div>
+
+       <script type="module">
+
+    import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+    const container = document.getElementById('container');
+
+    // Create file input element
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/png';
+    fileInput.style.display = 'block';
+    fileInput.style.margin = '20px 0';
+
+    // Handle file selection
+    fileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Display the uploaded image (optional)
+            let img = document.getElementById('uploaded-image');
+            if (!img) {
+                img = document.createElement('img');
+                img.id = 'uploaded-image';
+                img.style.maxWidth = '400px';
+                img.style.display = 'block';
+                container.appendChild(img);
+            }
+            img.src = e.target.result;
+            
+            img.onload = function() {
+
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixelArray = Array.from(imageData.data);
+
+                container.appendChild(canvas);
+                
+                console.log(pixelArray);
+
+                const data = new Float64Array(canvas.width * canvas.height);
+                for (let i = 0, n = pixelArray.length / 4; i < n; ++i) data[i] = Math.max(0, 1 - pixelArray[i * 4] / 254);
+
+                const n = Math.round(canvas.width * canvas.height / 40);
+
+                const worker = new Worker('script.js', { type: 'module' });
+
+                function messaged({data: points}){
+
+                    console.log(points);
+
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = "#000"; 
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = "#fff";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.beginPath();
+                    for (let i = 0, n = points.length; i < n; i += 2) {
+                        const x = points[i], y = points[i + 1];
+                        ctx.moveTo(x + 1.5, y);
+                        ctx.arc(x, y, 1.5, 0, 2 * Math.PI);
+                    }
+                    ctx.fillStyle = "#000";
+                    ctx.fill();
+
+                }
+
+                worker.addEventListener('message', messaged);
+                worker.postMessage({
+                    data: data,
+                    width: canvas.width,
+                    height: canvas.height,  
+                    n: n
+                });
+                
+            }
+
+
+        };
+        
+        reader.readAsDataURL(file);
+    
+    });
+
+    // Add file input to the container
+    container.appendChild(fileInput);
+
+
+    </script>
+
+</body>
+</html>
